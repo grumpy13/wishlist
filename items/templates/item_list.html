@@ -1,10 +1,15 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<form class="form-inline my-2 my-lg-0">
-        <input class="form-control mr-sm-2" type="search" placeholder="Search Items" aria-label="Search">
-        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+<form action="{% url 'item-list' %}">
+    <div class="input-group mb-3">
+        <input type="text" class="form-control" placeholder="Search" aria-label="Search" name="q" value="{{request.GET.q}}">
+{#         <div class="input-group-append"> #}
+            <button class="btn btn-outline-secondary" type="submit">Search</button>
+{#         </div> #}
+    </div>
 </form>
+
 <div class="row">
 {% for item in items %}
 <div class="col-sm-4 py-2">
@@ -13,10 +18,34 @@
             <div class="card-body bg-light">
                 <h3 class="card-title">{{item.name}}</h3>
                 <a href="{% url 'item-detail' item.id %}" class="btn btn-outline-dark">More</a>
+                <a href="{% url 'item-detail' item.id %}" class="btn btn-outline-dark">View</a>
+                <button onclick="favorite({{item.id}})" class="btn"><i id="fav-{{item.id}}" class="fas fa-star {% if item.id in my_fav %} text-warning {% endif %}"></i></button>
             </div>
         </div>
     </div>
 
 {% endfor %}
 </div>
-{% endblock%}
+<script type="text/javascript">
+    function favorite(item_id){
+        let button_id = "#fav-"+item_id
+        $.ajax({
+
+            type: "GET",
+            url: '/items/'+item_id+'/wished',
+            success: function(data){
+                if (data.action === "wish"){
+                    $(button_id).addClass('text-warning')
+                }
+                else{
+                    $(button_id).removeClass('text-warning')
+                }
+            },
+            error: function(){
+                alret("something went wrong")
+            },
+            
+        })
+    }
+</script>
+{% endblock content %}

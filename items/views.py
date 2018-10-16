@@ -1,13 +1,69 @@
 from django.shortcuts import render, redirect
-from items.models import Item
+from items.models import Item , FavoriteItem
 from .forms import UserRegisterForm, UserLoginForm
 from django.contrib.auth import login, logout, authenticate
+from django.db.models import Q
+from django.http import JsonResponse
+import requests 
+from django.contrib.auth.models import User
+
+
 
 # Create your views here.
-def item_list(request):
-    context = {
-        "items": Item.objects.all()
+def item_favorite(request, item_id):
+    item = Item.objects.get(id=item_id)
+    favorite , created = FavoriteItem.objects.get_or_create(item= item, user=request.user)
+    if created:
+        action= "wish"
+    else:
+        action="unwish"
+        favorite.delete()
+    data = {
+    "action": action
     }
+    return JsonResponse(data)
+
+def wished_items(request):
+    my_fav = []
+    for favorite in FavoriteItem.objects.filter(user = request.user):
+            my_fav.append(favorite.item)   
+    query = request.GET.get('q')
+    if query:
+    # Not Bonus. Querying through a single field.
+    # restaurants = restaurants.filter(name__icontains=query)
+    
+    # Bonus. Querying through multiple fields.
+        my_fav = my_fav.filter(
+        Q(name__icontains=query)|
+        Q(description__icontains=query)
+        ).distinct()
+
+    
+    context = {
+        "my_fav": my_fav,
+    }
+    return render(request, 'wished_list.html', context)
+
+def item_list(request):
+    items = Item.objects.all()
+    query = request.GET.get('q')
+    if query:
+    # Not Bonus. Querying through a single field.
+    # restaurants = restaurants.filter(name__icontains=query)
+    
+    # Bonus. Querying through multiple fields.
+        items = items.filter(
+        Q(name__icontains=query)|
+        Q(description__icontains=query)
+        ).distinct()
+    my_fav = []
+    if request.user.is_authenticated :
+        for favorite in FavoriteItem.objects.filter(user = request.user):
+            my_fav.append(favorite.item.id)      
+    context = {
+        "items": items,
+        "my_fav": my_fav,
+        }
     return render(request, 'item_list.html', context)
 
 def item_detail(request, item_id):

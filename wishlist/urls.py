@@ -27,6 +27,9 @@ urlpatterns = [
     path('user/register/', views.user_register, name='user-register'),
     path('user/login/', views.user_login, name='user-login'),
     path('user/logout/', views.user_logout, name='user-logout'),
+    path('items/<int:item_id>/wished', views.item_favorite, name='item-wished'),
+    path('items/wishlist/',views.wished_items ,name='wished-items'),
+
 ]
 
 urlpatterns+=static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
